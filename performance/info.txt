@@ -1,1 +1,46 @@
-information
+Abstract:
+
+Lake-effect precipitation, which significantly impacts regions downwind of the Great
+Lakes, poses unique forecasting challenges due to its dependence on localized
+processes and intricate interactions, making it an ideal candidate for deep learning.
+This study introduces a novel approach toward next-hour quantitative precipitation
+forecasts (QPF) for lake-effect precipitation by leveraging an improved generative
+adversarial network (GAN). Key innovations include testing multiple input variable
+groupings, modernizing the generator and discriminator, and expanding predictions to
+four Great Lakes: Superior, Michigan, Erie, and Ontario. A UNetFormer generator and
+spectral normalization in the discriminator are added to a pix2pix GAN framework to
+predict next-hour QPF for lake-effect events. A novel dataset is developed for the
+model with High-Resolution Rapid Refresh (HRRR) and Multi-Radar/Multi-Sensor System
+(MRMS) fields for input and MRMS precipitation estimates for the target. Five input
+variable groupings are tested to identify the optimal predictors for each of the four
+lakes, and saliency analysis is applied to identify the most important input variables.
+Two models are developed for each lake: one with a weighted loss function (LESNetA), and
+one without (LESNet-B). The developed models outperform the HRRR's predictions across all
+five metrics, with gains of over 100 percent over the HRRR in Pearson correlation coefficient
+and fractions skill score indicating superior forecasts in all precipitation intensities.
+LESNet-A performs better in heavier events, while LESNetB performs better in lighter events.
+Both are comparable in light events. Their outstanding performance notably displays the
+significant potential of modernized GANs to advance lake-effect precipitation prediction.
+
+
+Figure descriptions:
+
+metrics.pdf: Percent improvement of the models over the HRRR in various metrics.
+In each rectangle, the left side with the bolded number represents LESNet-B, and
+the right side with the italicized number represents LESNet-A.
+
+fss.pdf: Percent improvement of the models over the HRRR in various metrics. Each
+rectangle is split into four quadrants, one for each lake.
+
+superior.pdf: The HRRR, LESNet-A, LESNet-B, and the target compared for 3 distinct
+events over Lake Superior. Each column corresponds to a specific event from the
+test split. The number in the top-right corner of each prediction is the FSS for
+the threshold corresponding to the intensity of the event. "Light" is defined as
+0.25 mm, "moderate" is defined as 1 mm, and "heavy" is defined as 2 mm.
+
+michigan.pdf: The same as superior.pdf, but over Lake Michigan, and each row
+corresponds to a specific event from the test split.
+
+erie.pdf: The same as superior.pdf, but over Lake Erie.
+
+ontario.pdf: The same as superior.pdf, but over Lake Ontario.
