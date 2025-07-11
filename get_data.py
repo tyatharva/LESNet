@@ -1,4 +1,7 @@
+from cdo import *
+cdo = Cdo()
 # Get an instance of data (hour over lake)
+
 import os
 import csv
 import time
@@ -15,7 +18,6 @@ import pandas as pd
 import xarray as xr
 import scipy.ndimage as nd
 import metpy.calc as mpcalc
-from cdo import *
 from metpy.units import units
 from herbie import FastHerbie
 from datetime import datetime, timedelta
@@ -271,5 +273,4 @@ def main(thds=32):
 
 
 if __name__ == "__main__":
-    cdo = Cdo()
     main()
