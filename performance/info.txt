@@ -29,8 +29,9 @@ metrics.pdf: Percent improvement of the models over the HRRR in various metrics.
 In each rectangle, the left side with the bolded number represents LESNet-B, and
 the right side with the italicized number represents LESNet-A.
 
-fss.pdf: Percent improvement of the models over the HRRR in various metrics. Each
-rectangle is split into four quadrants, one for each lake.
+fss.pdf: Percent improvement of the models over the HRRR in Fractions Skill Score
+for various thresholds. Each rectangle is split into four quadrants, one for each lake.
+The neighborhood used is 5 pixels (0.05º).
 
 superior.pdf: The HRRR, LESNet-A, LESNet-B, and the target compared for 3 distinct
 events over Lake Superior. Each column corresponds to a specific event from the
