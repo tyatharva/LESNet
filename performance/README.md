@@ -28,6 +28,8 @@ An interactive website to explore machine‑learning predictions of lake‑effec
 2. Pick a date and time (UTC)
    - Click the “Date & Time (UTC)” field.
    - The calendar activates after you choose a lake.
+   - Dates with lake-effect are shaded by their use (train, val, test).
+   - Dates with yellow shading (test) will be the best representation of performance.
    - Times are in UTC and accepted at the top of the hour (e.g., 2025‑01‑15 12:00).
 
 3. Run the model
