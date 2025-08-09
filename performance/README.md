@@ -1,6 +1,7 @@
 # LESNet Viewer
 
 An interactive website to explore machine‑learning predictions of lake‑effect snow and related weather maps. It presents four side‑by‑side maps you can customize, compare, and inspect.
+Known issue: the credits can get hidden behind some layers. If you don't see the MAE for a panel, reload the page.
 **Refer to info.txt for information on the paper's abstract and figures.**
 
 ---
