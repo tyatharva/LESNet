@@ -48,6 +48,19 @@ def combined_metric(pred, target):
     return {'Combined': combined}
 
 
+def bias_sums(pred, target):
+    pred = np.asarray(pred)
+    target = np.asarray(target)
+    bins = [(0, 1.5), (1.5, 3), (3, 4.5), (4.5, np.inf)]
+    results = {}
+    for (low, high) in bins:
+        mask = (target > low) & (target <= high)
+        pred_sum = pred[mask].sum()
+        target_sum = target[mask].sum()
+        results[(low, high)] = (pred_sum, target_sum)
+    return results
+
+
 def compute_metrics_full(pred, target):
     pred = np.asarray(pred)
     target = np.asarray(target)
@@ -133,13 +146,16 @@ def save_images(phase, full, webpage, visuals, image_path, aspect_ratio=1.0, wid
         ds.close()
         model_metrics = compute_metrics_full(pred, target)
         hrrr_metrics = compute_metrics_full(hrrr, target)
-    
+
+    model_bias = bias_sums(pred, target)
+    hrrr_bias = bias_sums(hrrr, target)
+
     # NetCDF saving for special cases
     if phase not in ["train", "val", "test"]:
         # Metadata for the grid
         lat_min = 0.0 # Bottom-left latitude
         lon_min = 0.0 # Bottom-left longitude
-        
+
         if (smallname[-1] == "e"):
             lat_min = 40.97
             lon_min = -82.62
@@ -152,24 +168,24 @@ def save_images(phase, full, webpage, visuals, image_path, aspect_ratio=1.0, wid
         elif (smallname[-1] == "s"):
             lat_min = 45.97
             lon_min = -90.12
-        
+
         lat_step = 0.01  # Step size in degrees for latitude
         lon_step = 0.01  # Step size in degrees for longitude
-        
+
         # Dimensions of the grid
         height, width = 256, 512
         if (smallname[-1] == "m"):
             height, width = 512, 256
-        
+
         # Create 1D coordinate arrays
         lats = lat_min + np.arange(height) * lat_step
         lons = lon_min + np.arange(width) * lon_step
-        
+
         # Flip data along latitude axis
         hrrr = np.flip(hrrr, axis=0)
         pred = np.flip(pred, axis=0)
         target = np.flip(target, axis=0)
-    
+
         # Create the dataset
         ds = xr.Dataset(
             {
@@ -182,7 +198,7 @@ def save_images(phase, full, webpage, visuals, image_path, aspect_ratio=1.0, wid
                 "lon": lons,
             },
         )
-        
+
         # Add variable attributes and save
         ds["HRRR"].attrs["description"] = "HRRR prediction"
         ds["Model"].attrs["description"] = "Model prediction"
@@ -190,7 +206,7 @@ def save_images(phase, full, webpage, visuals, image_path, aspect_ratio=1.0, wid
         ds.attrs["title"] = f"{name}"
         ds.to_netcdf(os.path.join(os.path.dirname(image_dir), (smallname + ".nc")), format="NETCDF3_64BIT")
 
-    return model_metrics, hrrr_metrics
+    return model_metrics, hrrr_metrics, model_bias, hrrr_bias
 
 
 
