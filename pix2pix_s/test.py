@@ -36,6 +36,7 @@ from util import html
 import torch
 from torch.nn.functional import l1_loss
 import numpy as np
+from collections import defaultdict
 
 try:
     import wandb
@@ -102,6 +103,10 @@ if __name__ == '__main__':
     saliency_sum = np.zeros(num_ch, dtype=np.float64)
     batch_count  = 0
 
+    # prepare bias ratio calculation
+    mb_sum = defaultdict(lambda: [0, 0])
+    hb_sum = defaultdict(lambda: [0, 0])
+
     for i, data in enumerate(dataset):
         if i >= opt.num_test:
             break
@@ -112,7 +117,7 @@ if __name__ == '__main__':
         img_path = model.get_image_paths()
         if i % 5 == 0:
             print(f'processing ({i:04d})-th image... {img_path}')
-        model_metrics, hrrr_metrics = save_images(
+        model_metrics, hrrr_metrics, model_bias, hrrr_bias = save_images(
             opt.phase, opt.full_val, webpage, visuals,
             img_path, aspect_ratio=opt.aspect_ratio,
             width=opt.display_winsize, use_wandb=opt.use_wandb)
@@ -130,23 +135,31 @@ if __name__ == '__main__':
             if input_A.grad is not None:
                 input_A.grad.zero_()
             model.netG.zero_grad()
-    
+
             # enable gradients on the inputs
             input_A.requires_grad_(True)
-    
+
             # forward through scaler + generator
             # scaled_A = model.input_scaler(input_A)
             fake_B   = model.netG(input_A)
-    
+
             # use sum of the output as a dummy scalar loss
             loss = fake_B.sum()
             loss.backward()
-    
+
             # mean absolute gradient over (batch,H,W) → per-channel
             sal = input_A.grad.abs().mean(dim=[0,2,3]).cpu().numpy()
             saliency_sum += sal
             batch_count   += 1
-    
+
+            # add to bias ratio counting
+            for k, (ps, ts) in model_bias.items():
+                mb_sum[k][0] += ps  # add pred_sum
+                mb_sum[k][1] += ts  # add target_sum
+            for k, (ps, ts) in hrrr_bias.items():
+                hb_sum[k][0] += ps  # add pred_sum
+                hb_sum[k][1] += ts  # add target_sum
+
             # clear gradients
             input_A.grad.zero_()
             model.netG.zero_grad()
@@ -179,6 +192,32 @@ if __name__ == '__main__':
             f.write('\n=== Average Saliency per Channel over Test Split ===\n')
             for idx in range(num_ch):
                 f.write(f'Channel {idx:2d} — Saliency: {saliency_mean[idx]:.6f}\n')
+
+    # Average and save out bias ratios
+    model_ratios = {k: (ps / ts if ts > 0 else np.nan) for k, (ps, ts) in mb_sum.items()}
+    hrrr_ratios = {k: (ps / ts if ts > 0 else np.nan) for k, (ps, ts) in hb_sum.items()}
+    bias_path = os.path.join(web_dir, 'bias_ratios.txt')
+    with open(bias_path, 'w') as f:
+        f.write("MODEL\n")
+        f.write(f"{'Bucket':<15}{'Bias Ratio':>12}\n")
+        f.write("-" * 27 + "\n")
+        for (low, high), ratio in model_ratios.items():
+            if high == np.inf:
+                bucket = f">{low}"
+            else:
+                bucket = f"{low}–{high}"
+            f.write(f"{bucket:<15}{ratio:>12.6f}\n")
+
+        f.write("\n\nHRRR\n")
+        f.write(f"{'Bucket':<15}{'Bias Ratio':>12}\n")
+        f.write("-" * 27 + "\n")
+        for (low, high), ratio in hrrr_ratios.items():
+            if high == np.inf:
+                bucket = f">{low}"
+            else:
+                bucket = f"{low}–{high}"
+            f.write(f"{bucket:<15}{ratio:>12.6f}\n")
+
 
 
     writer._save()
